@@ -1,0 +1,128 @@
+---
+title: "PCA-example"
+author: "Mariachiara Fortuna"
+date: "November 4, 2019"
+output: html_document
+---
+
+```{r}
+library(psych)
+library(GGally)
+```
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      warning = FALSE,
+                      message = FALSE)
+```
+
+```{r}
+USArrests
+```
+
+# Exploratory analysis
+
+Check the correlation:
+
+```{r}
+cor(USArrests)
+```
+
+
+Visual representation of correlation between variables:
+
+
+```{r}
+pairs.panels(USArrests)
+```
+
+```{r}
+ggpairs(USArrests)
+```
+
+
+# PCA analysis
+
+```{r}
+pca_arrest <- prcomp(USArrests, center = T, scale = T)
+```
+
+```{r}
+pca_arrest
+```
+
+
+```{r}
+summary(pca_arrest)
+```
+
+### Some math
+
+Standard deviation of the components are the square roots of the eigenvalues of the Sigma matrix (variance & cov matrix of X)
+
+These are the eigenvalues (scaling matrix):
+
+```{r}
+pca_arrest$sd^2
+```
+
+
+Here we can compute the proportion of variance:
+
+```{r}
+pca_arrest$sd^2/sum(pca_arrest$sd^2)
+```
+
+These are the eigenvectors (rotation matrix):
+
+```{r}
+pca_arrest$rotation
+```
+
+Let's do some math:
+
+```{r}
+A <- pca_arrest$rotation
+D <- diag(pca_arrest$sd^2)
+```
+
+```{r}
+A %*% D %*% t(A)
+```
+
+```{r}
+cor(USArrests)
+```
+
+Here we can see the new values of the observations in the PC space:
+
+```{r}
+pca_arrest$x
+```
+
+## Some variations
+
+Select a given number of components:
+
+```{r}
+pca_arrest_3 <- prcomp(USArrests, center = T, scale = T,
+                     rank. = 3)
+```
+
+Select components imposing a tolerance:
+
+```{r}
+pca_arrest_tol <- prcomp(USArrests, center = T, scale = T,
+                     tol = 0.4)
+pca_arrest_tol
+```
+
+Doing PCA on a subset of variables:
+
+```{r}
+pca_arrest_subset <- prcomp(~ Murder + Assault + Rape, data = USArrests, 
+                         center = T, scale = T)
+pca_arrest_subset
+```
+
