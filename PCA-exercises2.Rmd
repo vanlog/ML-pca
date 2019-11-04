@@ -8,10 +8,19 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+
 ```{r}
 library(tidyverse)
 library(dplyr)
 library(psych)
+```
+
+```{r}
+source("functions.R")
+```
+
+```{r}
+Data <- read.csv("./data/food-nutritional-values.csv")
 ```
 
 
@@ -19,14 +28,15 @@ library(psych)
 ## Question1: 
 ```{r}
 
-Data <- read.csv("./data/food-nutritional-values.csv")
+
 NV<- sum(sapply(Data, is.numeric))
 NF <- sum(sapply(Data, is.factor))
 
-
-
 ```
 
+```{r}
+check_variable_class(Data)
+```
 
 
 There are a total of `r nrow(Data)` observations in food-nutrition-values data. With the total variables been equal to  `r ncol(Data)`.The total number of variables that are numeric are `r NV`.The total number of factor variables within our data are  `r NF`.
