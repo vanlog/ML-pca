@@ -1,0 +1,65 @@
+---
+title: "PCA exercises"
+author: "Mariachiara Fortuna"
+date: "November 4, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r}
+library(tidyverse)
+library(dplyr)
+library(psych)
+```
+
+
+
+## Question1: 
+```{r}
+
+Data <- read.csv("./data/food-nutritional-values.csv")
+NV<- sum(sapply(Data, is.numeric))
+NF <- sum(sapply(Data, is.factor))
+
+
+
+```
+
+
+
+There are a total of `r nrow(Data)` observations in food-nutrition-values data. With the total variables been equal to  `r ncol(Data)`.The total number of variables that are numeric are `r NV`.The total number of factor variables within our data are  `r NF`.
+##  Question 2
+```{r}
+
+Nas <- Data %>% summarise_all(list(Na=~sum(is.na(.))))
+
+Nas %>% gather("Name","No Of Na ")
+
+CleanedData <- na.omit(Data)
+```
+The table above is illustrating the total number of missing NA in each variable within the dataset provided. Secondly the row that had the missing data were removed using the na.omit and the resulting data is stored as CleanedData.
+
+## Question 3 :
+```{r}
+Num_Data <- CleanedData %>% select_if(is.numeric)
+
+pairs.panels(Num_Data[,1:10])
+
+```
+Overhere we are displaying the correlation of the first 10 numeric variables. We are discoverying that there is a correllation between most of these nutrients. Even though the data associated to variables like ash,carbohydrate,sugar and calcium are not evenly spread. variables like water, energy and proteins are evenly distributed across the spectrum.
+## Question4 
+```{r}
+mean_table <-  Num_Data %>%summarise_all(list(MeanSD=~mean(.)))
+sd_table <-  Num_Data %>%summarise_all(list(MeanSD=~sd(.)))
+meanSD_table <- rbind(mean_table,sd_table)
+```
+## Question5
+```{r}
+
+
+
+```
+
+
