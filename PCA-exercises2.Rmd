@@ -13,6 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(dplyr)
 library(psych)
+library(kableExtra)
 ```
 
 ```{r}
@@ -25,10 +26,9 @@ Data <- read.csv("./data/food-nutritional-values.csv")
 
 
 
-## Question1: 
+## Question1:
+
 ```{r}
-
-
 NV<- sum(sapply(Data, is.numeric))
 NF <- sum(sapply(Data, is.factor))
 
@@ -40,6 +40,7 @@ check_variable_class(Data)
 
 
 There are a total of `r nrow(Data)` observations in food-nutrition-values data. With the total variables been equal to  `r ncol(Data)`.The total number of variables that are numeric are `r NV`.The total number of factor variables within our data are  `r NF`.
+
 ##  Question 2
 ```{r}
 
@@ -64,7 +65,31 @@ Overhere we are displaying the correlation of the first 10 numeric variables. We
 mean_table <-  Num_Data %>%summarise_all(list(MeanSD=~mean(.)))
 sd_table <-  Num_Data %>%summarise_all(list(MeanSD=~sd(.)))
 meanSD_table <- rbind(mean_table,sd_table)
+
+meanSD_table
 ```
+
+
+MC comments:
+
+```{r}
+mean_table <- Num_Data %>%
+  summarise_all(list(~mean(.))) %>%
+  gather("Variable", "Mean") %>%
+  mutate(Mean = round(Mean, digits = 3))
+
+sd_table <- Num_Data %>%
+  summarise_all(list(~sd(.))) %>%
+  gather("Variable", "Sd") %>%
+  mutate(Sd = round(Sd, digits = 3))
+
+meanSD_table <- mean_table %>%
+  left_join(sd_table)
+
+meanSD_table %>%
+  kable()
+```
+
 ## Question5
 ```{r}
 
@@ -84,6 +109,7 @@ pairs.panels(P_data)
 
 
 ```
+
 ```{r}
 pca_nutri <- prcomp(P_data, center = T, scale = T)
 pca_nutri
@@ -114,6 +140,17 @@ Data <-cbind(xlabel=1:10,ylabel)
 Data <- as.data.frame(Data)
 
 ```
+
+MC comment:
+
+```{r}
+scree_plot_data <- data.frame(
+  xlabel = 1:10,
+  ylabel = imp[2,]) 
+```
+
+
+
 Generating the scree plot
 ```{r}
 library(ggplot2)
