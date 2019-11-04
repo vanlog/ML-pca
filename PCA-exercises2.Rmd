@@ -71,5 +71,74 @@ meanSD_table <- rbind(mean_table,sd_table)
 
 
 ```
+## Principal Component Analysis Execise
+We are working on the second segment of the problem that we are dealing with in the afternoon.
+```{r}
+P_data <- Num_Data[1:50,1:10]
+
+```
+## Performing The PCA on the P_data exploratory analysis
+```{r}
+pairs.panels(P_data)
 
 
+
+```
+```{r}
+pca_nutri <- prcomp(P_data, center = T, scale = T)
+pca_nutri
+```
+We are observing the first ten principal components associated with the our first ten variables.
+
+
+## Question 2 Show your comments 
+```{r}
+gg<-summary(pca_nutri)
+
+gg
+
+```
+
+In this summary table above we observing that the first principal component is explains 47% of the variance whiles the second and third principal components explains the 24% and 14% respectivly. We can also observe that the standard deviation of the first three principal components are 2.16,1.55 and 1.21 respectively. Finally we can also conclude that the first principal component are commulativly explaining 85.5% of the variability associated with our data.
+
+## Question 3 : Generating The Scree plot
+```{r}
+imp <- gg$importance
+
+imp 
+
+xlabel <- colnames(imp)
+ylabel <- imp[2,]
+
+Data <-cbind(xlabel=1:10,ylabel)
+Data <- as.data.frame(Data)
+
+```
+Generating the scree plot
+```{r}
+library(ggplot2)
+ggplot(Data,aes(x=xlabel,y=ylabel))+geom_col()+
+  geom_line()
+
+
+
+```
+
+## Question 4: Generating A ScatterPlot
+```{r}
+imp <- gg$importance[]
+
+xlabel <- colnames(imp)
+y_label <- imp[3,]
+Data <-cbind(xlabel=1:10,ylabel)
+
+New_dam <-pca_nutri$x
+New_dam  <-New_dam[1:50,1:2]
+New_dam <- as.data.frame(New_dam)
+
+ggplot(New_dam,
+       aes(x=PC1,y =PC2))+
+  geom_point()
+
+```
+The commulative variance associated with the first two principal component is about `r imp[3,2]`%.
