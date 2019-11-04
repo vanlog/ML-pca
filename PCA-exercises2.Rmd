@@ -11,6 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r}
 library(tidyverse)
 library(dplyr)
+library(psych)
 ```
 
 
@@ -42,6 +43,9 @@ The table above is illustrating the total number of missing NA in each variable 
 
 ## Question 3 :
 ```{r}
+Num_Data <- CleanedData %>% select_if(is.numeric)
+
+pairs.panels(Num_Data[,1:10])
 
 ```
-
+Overhere we are displaying the correlation of the first 10 numeric variables. We are discoverying that there is a correllation between most of these nutrients. Even though the data associated to variables like ash,carbohydrate,sugar and calcium are not evenly spread. variables like water, energy and proteins are evenly distributed across the spectrum.
