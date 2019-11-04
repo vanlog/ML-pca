@@ -49,3 +49,17 @@ pairs.panels(Num_Data[,1:10])
 
 ```
 Overhere we are displaying the correlation of the first 10 numeric variables. We are discoverying that there is a correllation between most of these nutrients. Even though the data associated to variables like ash,carbohydrate,sugar and calcium are not evenly spread. variables like water, energy and proteins are evenly distributed across the spectrum.
+## Question4 
+```{r}
+mean_table <-  Num_Data %>%summarise_all(list(MeanSD=~mean(.)))
+sd_table <-  Num_Data %>%summarise_all(list(MeanSD=~sd(.)))
+meanSD_table <- rbind(mean_table,sd_table)
+```
+## Question5
+```{r}
+
+
+
+```
+
+
