@@ -152,10 +152,53 @@ ggplot() +
   theme_minimal()
 ```
 
+
+# Graphical representation of PCA
+
+
 ```{r}
-ggplot(seals, aes(long, lat)) +
-  geom_segment(aes(xend = long + delta_long, yend = lat + delta_lat),
-    arrow = arrow(length = unit(0.1,"cm"))) +
-  borders("state")
+library(factoextra)
+```
+
+
+## Scree plot
+
+```{r}
+fviz_eig(pca_arrest)
+```
+
+
+## Individuals
+
+```{r}
+fviz_pca_ind(pca_arrest, repel = T,
+             col.ind = "cos2")
+```
+
+
+```{r}
+fviz_pca_var(pca_arrest,
+             col.ind = "contrib", repel = T)
+```
+
+```{r}
+fviz_pca_biplot(pca_arrest,
+                col.var = "red",
+             col.ind = "darkgrey", repel = T)
+```
+
+
+
+```{r}
+devtools::install_github("vqv/ggbiplot")
+```
+
+
+```{r}
+library(ggbiplot)
+```
+
+```{r}
+ggbiplot(pca_arrest)
 ```
 
