@@ -126,3 +126,36 @@ pca_arrest_subset <- prcomp(~ Murder + Assault + Rape, data = USArrests,
 pca_arrest_subset
 ```
 
+
+# Bivariate plot
+
+
+```{r}
+pc_data <- as.data.frame(pca_arrest$x[,1:2])
+pc_rotation <- as.data.frame(pca_arrest$rotation[,1:2])
+
+```
+
+
+```{r}
+ggplot() +
+  geom_point(data = pc_data, aes(x = PC1, y = PC2)) +
+  geom_segment(data = pc_rotation, 
+               aes(x = 0, y = 0,
+                   xend = PC1,
+                   yend = PC2),
+               arrow = arrow(length=unit(0.10,"cm"),
+                             ends="last", type = "closed"),
+             col = "red") +
+  ggforce::geom_circle(aes(x0 = 0, y0 = 0, r = 1),
+                       col = "grey") +
+  theme_minimal()
+```
+
+```{r}
+ggplot(seals, aes(long, lat)) +
+  geom_segment(aes(xend = long + delta_long, yend = lat + delta_lat),
+    arrow = arrow(length = unit(0.1,"cm"))) +
+  borders("state")
+```
+
