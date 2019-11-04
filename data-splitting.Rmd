@@ -1,0 +1,73 @@
+---
+title: "Data splitting"
+author: "Mariachiara Fortuna"
+date: "November 4, 2019"
+output: html_document
+---
+
+## Data splitting
+
+```{r loading}
+library(caret)
+library(tidyverse)
+```
+
+
+```{r}
+data <- readRDS("./data/class_data.rds")
+
+classes <- data %>% select(classes) %>% pull()
+predictors <- data %>% select(-classes)  
+```
+
+
+twoClassData: data.frame di 208 obs, 2 colonne (predictorA, predictorB)
+
+Per _stratified random splitting_ passo come argomento il vettore di outcome:
+
+```{r basic-splitting}
+set.seed(1)
+trainingRows <- createDataPartition(classes,
+                                    p = .8,
+                                    list = FALSE) 
+class(trainingRows)
+```
+
+Ottengo una matrice di numeri di riga. Genero training e test set:
+
+```{r}
+trainPredictors <- predictors[trainingRows, ]
+trainClasses <- classes[trainingRows]
+
+testPredictors <- predictors[-trainingRows, ]
+testClasses <- classes[-trainingRows]
+```
+
+
+## Resampling
+
+Creo una lista di partizioni
+
+```{r}
+repeatedSplits <- createDataPartition(classes,
+                                      p = 0.8,
+                                      times = 3)
+```
+
+## k-fold validation
+
+```{r}
+set.seed(1)
+cvSplits <- createFolds(classes, 
+                        k = 10,
+                        returnTrain = T)
+```
+
+Ogni fold ospita il 100-k% delle osservazioni. 
+
+Se voglio applicare il primo split:
+
+```{r}
+cvTrainPredictors1 <- predictors[cvSplits$Fold01,]
+cvTestPredictors1 <- predictors[-cvSplits$Fold01,]
+```
