@@ -179,3 +179,20 @@ ggplot(New_dam,
 
 ```
 The commulative variance associated with the first two principal component is about `r imp[3,2]`%.
+
+
+## Data Splitting In Train And Test
+```{r}
+
+
+
+ind <- sample(2, nrow(P_data), replace = TRUE, prob = c(0.8,0.2))
+
+Train <- P_data[ind==1,]
+
+Test <- P_data[ind==2,]
+
+
+
+```
+
