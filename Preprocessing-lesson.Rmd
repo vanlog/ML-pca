@@ -8,6 +8,9 @@ library(tidyverse)
 library(dataMaid)
 library(caret)
 library(e1071)
+library(psych)
+library(GGally)
+library(corrplot)
 ```
 
 
@@ -164,6 +167,49 @@ segmentation %>%
 t_outliers <- seg_train %>%
   preProcess(method = "spatialSign")
 
+seg_sign <- predict(t_outliers, seg_train)
+```
 
+
+# Removing predictors
+
+## Near Zero Variance predictors
+
+```{r}
+nearZeroVar(seg_train)
+```
+
+## Highly Correlated Predictors
+
+```{r}
+pairs.panels(seg_train[,1:10])
+```
+
+
+```{r}
+ggpairs(segmentation, columns = 4:7,
+        aes(col = Class), progress = F)
+```
+
+```{r}
+ggduo(segmentation,
+      colnames(segmentation)[4:7],
+      "Class")
+```
+
+
+```{r}
+seg_correlation <- cor(seg_train)
+
+corrplot::corrplot(seg_correlation, 
+                   order = "hclust",
+                   tl.cex = 0.3)
+```
+
+```{r}
+highCorrVar <- findCorrelation(seg_correlation, 
+                               cutoff = 0.80)
+
+seg_filterd <- seg_train[ , -highCorrVar]
 ```
 
