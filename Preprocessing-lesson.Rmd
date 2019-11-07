@@ -1,0 +1,215 @@
+---
+title: "Preprocessing"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+library(dataMaid)
+library(caret)
+library(e1071)
+library(psych)
+library(GGally)
+library(corrplot)
+```
+
+
+
+```{r}
+data_path <- "./data"
+
+segmentation <- readRDS(file.path(data_path,
+                                  "segmentation.rds"))
+```
+
+
+# Check on data quality
+
+```{r}
+dataMaid::check(segmentation)
+```
+
+
+# Prepare data
+
+```{r}
+seg_train <- segmentation %>%
+  filter(Case == "Train") %>%
+  select(-c(Cell, Case, Class), -contains("Status"))
+```
+
+```{r}
+seg_test <- segmentation %>%
+  filter(Case == "Test") %>%
+  select(-c(Cell, Case, Class), -contains("Status"))
+```
+
+# Center and scale
+
+```{r}
+t_center <- seg_train %>%
+  preProcess(method = "center")
+
+seg_centered <- predict(t_center, seg_train)
+```
+
+
+```{r}
+t_scale <- seg_train %>%
+  preProcess(method = c("center", "scale"))
+
+seg_scaled <- predict(t_scale, seg_train)
+```
+
+
+# PCA
+
+```{r}
+t_pca <- seg_train %>%
+  preProcess(method = c("center", "scale", "pca"),
+             thresh = 0.99)
+
+seg_pca <- predict(t_pca, seg_train)
+seg_pca_test <- predict(t_pca, seg_test)
+```
+
+
+# Range
+
+```{r}
+t_range <- seg_train %>%
+  preProcess(method = "range", rangeBounds = c(0, 1))
+
+seg_range <- predict(t_range, seg_train)
+```
+
+# Skewness
+
+```{r}
+seg_train %>%
+  ggplot(aes(KurtIntenCh1)) +
+  geom_histogram() +
+  theme_minimal()
+```
+
+```{r}
+seg_train %>%
+  ggplot(aes(log(KurtIntenCh1))) +
+  geom_histogram() +
+  theme_minimal()
+```
+
+Check skewness:
+
+```{r}
+seg_train %>%
+  summarise_all(list(skewness)) %>%
+  gather("Variables", "Skewness") %>%
+  arrange(desc(Skewness))
+```
+
+```{r}
+t_boxcox <- seg_train %>%
+  preProcess(method = "BoxCox")
+
+seg_boxcox <- predict(t_boxcox, seg_train)
+```
+
+```{r}
+BoxCoxTrans(segmentation$KurtIntenCh1)
+```
+
+```{r}
+t_yj <- seg_train %>%
+  preProcess(method = "YeoJohnson")
+
+seg_yj <- predict(t_yj, seg_train)
+```
+
+
+# Outliers
+
+Check for specific variables:
+
+```{r}
+dataMaid::identifyOutliers(seg_train$AvgIntenCh1)
+```
+
+```{r}
+seg_train %>%
+  ggplot(aes(x = factor(1), y = AngleCh1)) +
+  geom_boxplot()
+```
+
+
+
+```{r}
+seg_train %>%
+  ggplot(aes(x = factor(1), y = AvgIntenCh1)) +
+  geom_boxplot()
+```
+
+```{r}
+segmentation %>%
+  ggplot(aes(x = Class, y = AvgIntenCh1)) +
+  geom_boxplot()
+```
+
+
+```{r}
+segmentation %>%
+  ggplot(aes(x = Class, y = AngleCh1)) +
+  geom_boxplot()
+```
+
+
+```{r}
+t_outliers <- seg_train %>%
+  preProcess(method = "spatialSign")
+
+seg_sign <- predict(t_outliers, seg_train)
+```
+
+
+# Removing predictors
+
+## Near Zero Variance predictors
+
+```{r}
+nearZeroVar(seg_train)
+```
+
+## Highly Correlated Predictors
+
+```{r}
+pairs.panels(seg_train[,1:10])
+```
+
+
+```{r}
+ggpairs(segmentation, columns = 4:7,
+        aes(col = Class), progress = F)
+```
+
+```{r}
+ggduo(segmentation,
+      colnames(segmentation)[4:7],
+      "Class")
+```
+
+
+```{r}
+seg_correlation <- cor(seg_train)
+
+corrplot::corrplot(seg_correlation, 
+                   order = "hclust",
+                   tl.cex = 0.3)
+```
+
+```{r}
+highCorrVar <- findCorrelation(seg_correlation, 
+                               cutoff = 0.80)
+
+seg_filterd <- seg_train[ , -highCorrVar]
+```
+
