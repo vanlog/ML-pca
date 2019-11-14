@@ -1,0 +1,376 @@
+---
+title: "Gradient descent algorithms"
+author: "Mariachiara Fortuna"
+date: "November 14, 2019"
+output: pdf_document
+---
+
+```{r}
+library(tidyverse)
+```
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Esempio gradiente
+
+```{r}
+
+objFun <- function(x) { x^4 - 3*x^3 + 2}
+
+gradient <- function(x) {4*x^3 - 9*x^2}
+
+objFun(2)
+gradient(2)
+```
+
+```{r}
+ggplot(data = data.frame(x = 0), aes(x = x)) +
+  stat_function(fun = objFun, col = "red") +
+  stat_function(fun = gradient, col = "blue") +
+  xlim(-10, 10) +
+  theme_minimal()
+```
+
+```{r}
+gamma <- 0.008
+iter <- 500
+
+set.seed(123)
+x <- runif(1, 0, 10)
+
+x_vec <- numeric(iter)
+
+```
+
+```{r}
+for(i in seq_len(iter)){
+  x <- x - gamma * gradient(x)
+  x_vec[i] <- x
+}
+```
+
+```{r}
+ggplot() +
+  stat_function(data = data.frame(x = 0), 
+                aes(x = x),
+                fun = objFun, col = "red") +
+  stat_function(data = data.frame(x = 0), 
+                aes(x = x),
+                fun = gradient, col = "blue") +
+  geom_point(aes(x = x_vec, y = objFun(x_vec))) +
+  xlim(-10, 10) +
+  theme_minimal()
+```
+
+```{r}
+ggplot(data = data.frame(iter = 1:iter,
+                         x_vec = x_vec),
+       aes(x = iter, y = x_vec)) +
+  geom_line() +
+  geom_point() +
+  theme_minimal()
+```
+
+
+## Trasformiamo in funzione
+
+```{r}
+polin_optim <- function(xstart, iter, gamma){
+  x <- xstart
+  x_vec <- numeric(iter)
+  for(i in seq_len(iter)){
+    x <- x - gamma * gradient(x)
+    x_vec[i] <- x
+  }
+  result <- list(x_vec = x_vec,
+                 x = x, 
+                y = objFun(x))
+  return(result)
+}
+```
+
+```{r}
+polin_optim(xstart = 4.8, iter = 500, 
+            gamma = 0.003)
+```
+
+
+## Miglioriamo la funzione
+
+```{r}
+
+polin_optim2 <- function(xstart, maxit, gamma,
+                        tolerance, print = T){
+  x <- xstart
+  x_vec <- numeric(0)
+  iter <- 1
+  tol <- 1
+  while(iter < maxit && tol > tolerance){
+    xCurrent <- x - gamma * gradient(x)
+    tol <- abs(xCurrent - x)
+    x <- xCurrent
+    x_vec <- c(x_vec, x)
+    iter <- iter + 1 
+  }
+  result <- list(x = x, 
+                y = objFun(x))
+  if(print == T) {result$x_vec <- x_vec}
+  return(result)
+}
+```
+
+```{r}
+polin_optim2(xstart = 4.8, maxit = 500, 
+            gamma = 0.003, tolerance = 0.0000002,
+            print = T)
+```
+
+## Funzione per il plot
+
+```{r}
+optim_results <- polin_optim2(xstart = 4.8, 
+                              maxit =500, 
+                              gamma = 0.003,
+                              tolerance = 0.00002,
+                              print = T)
+
+
+```
+
+
+
+```{r}
+gd_plot <- function(x_vec){
+  
+  data_plot <- data.frame(iter = 1:length(x_vec),
+                          x = x_vec)
+  ggplot(data = data_plot,
+         aes(x = iter, y = x)) +
+    geom_line() +
+    geom_point() +
+    theme_minimal() +
+    labs(title = "Iteration vs Loss")
+  }
+```
+
+
+```{r}
+gd_plot(optim_results$x_vec)
+```
+
+```{r}
+polin_optim3 <- function(xstart, maxit, gamma,
+                        tolerance, print = T,
+                        plot = T){
+  x <- xstart
+  x_vec <- numeric(0)
+  iter <- 1
+  tol <- 1
+  while(iter < maxit && tol > tolerance){
+    xCurrent <- x - gamma * gradient(x)
+    tol <- abs(xCurrent - x)
+    x <- xCurrent
+    x_vec <- c(x_vec, x)
+    iter <- iter + 1 
+  }
+  result <- list(x = x, 
+                y = objFun(x))
+  if(print == T) {result$x_vec <- x_vec}
+  # if(plot == T) {result$gd_plot(x_vec)}
+  result
+}
+```
+
+```{r}
+polin_optim3(xstart = 4.8, 
+                              maxit =500, 
+                              gamma = 0.003,
+                              tolerance = 0.00002,
+                              print = T)
+```
+
+## Applicazione al problema della regressione lineare
+
+```{r}
+set.seed(8675309)
+n = 1000
+x1 = rnorm(n)
+x2 = rnorm(n)
+y = 1 + .5*x1 + .2*x2 + rnorm(n)
+
+X = cbind(Intercept=1, x1, x2)
+
+linear_gd_optim <- function(par, X, y, tolerance=1e-3, 
+                            maxit=1000, stepsize=1e-3, 
+                            adapt=F, verbose=T){
+  # initialize
+  beta = par; names(beta) = colnames(X)
+  loss = crossprod(X%*%beta - y)
+  tol = 1
+  iter = 1
+  
+  while(tol > tolerance && iter < maxit){
+    LP = X%*%beta
+    grad = t(X) %*% (LP - y)
+    betaCurrent = beta - stepsize * grad
+    tol = max(abs(betaCurrent - beta))
+    beta = betaCurrent
+    loss = append(loss, crossprod(LP-y))
+    iter = iter + 1
+    if (adapt) stepsize = ifelse(loss[iter] < loss[iter-1],  stepsize*1.2, stepsize*.8)
+    if (verbose && iter%%10 == 0) message(paste('Iteration:', iter))
+  }
+  
+  list(
+    par = beta,
+    loss = loss,
+    RSE = sqrt(crossprod(LP - y) / (nrow(X) - ncol(X))),
+    iter = iter,
+    fitted = LP
+  )
+}
+
+
+
+```
+
+
+```{r}
+
+init <- rep(0, 3)
+gd_out <- linear_gd_optim(init, X=X, y=y, maxit = 1e4,
+                          tolerance = 1e-6,
+                          stepsize=.00001)
+str(gd_out)
+round(gd_out$par,5)
+
+summary(lm(y ~ x1 + x2))
+
+#check
+gd_plot(x_vec = gd_out$loss)
+```
+
+
+## Steepest descent algorithm
+
+```{r}
+linear_gsd_optim <- function(par, X, y, tolerance=1e-3,
+                             maxit=1000, verbose=T){
+  # initialize
+  beta = par; names(beta) = colnames(X)
+  loss = crossprod(X%*%beta - y)
+  tol = 1
+  iter = 1
+  
+  while(tol > tolerance && iter < maxit){
+    LP = X%*%beta
+    grad = t(X) %*% (LP - y)
+    hess = crossprod(X)
+    # drop(): 1x1 matrix -> scalar
+    step = drop(crossprod(grad,grad) / (t(grad) %*% hess %*% grad))
+    betaCurrent = beta - step * grad
+    tol = max(abs(betaCurrent - beta))
+    beta = betaCurrent
+    loss = append(loss, crossprod(LP-y))
+    iter = iter + 1
+    if (verbose && iter%%10 == 0) message(paste('Iteration:', iter))
+  }
+  
+  list(
+    par = beta,
+    loss = loss,
+    RSE = sqrt(crossprod(LP - y) / (nrow(X) - ncol(X))),
+    iter = iter,
+    fitted = LP
+  )
+}
+
+```
+
+```{r}
+init <- matrix(c(1,1), nrow = ncol(X), ncol = 1)
+
+gsd_out <- linear_gsd_optim(init, X = X, y = Y, maxit = 10000,
+                            tolerance = 1e-6)
+pred_gsd <- drop(as.matrix(X) %*% as.matrix(gsd_out$par))
+```
+
+
+# Application to data
+
+
+### Data
+
+```{r}
+mtcars <- scale(mtcars)
+
+X <- as.matrix(mtcars)[, 3:6]
+Y <- mtcars[,1]
+```
+
+### Gradient descent
+
+```{r}
+
+init <- matrix(c(1,1), nrow = ncol(X), ncol = 1)
+
+gd_out <- linear_gd_optim(init, X = X, y = Y,
+                          maxit = 10000,
+                          tolerance = 1e-6,
+                          stepsize=.001)
+pred_gd <- drop(as.matrix(X) %*%
+                     as.matrix(gd_out$par))
+
+```
+
+
+### Steepest descent
+
+```{r}
+init <- matrix(c(1,1), nrow = ncol(X), ncol = 1)
+
+gsd_out <- linear_gsd_optim(init, X = X, y = Y, maxit = 10000,
+                            tolerance = 1e-6)
+pred_gsd <- drop(as.matrix(X) %*% as.matrix(gsd_out$par))
+```
+
+
+### OLS / MLE estimation
+
+```{r}
+fit_lm <- lm(Y ~ X)
+pred_lm <- predict(fit_lm, 
+                   newdata =data.frame(X))
+```
+
+
+### Comparison dataframe
+
+```{r}
+fitted_train <- data.frame(
+  Y = Y,
+  pred_lm = pred_lm,
+  pred_gd = pred_gd,
+  pred_gsd = pred_gsd)  %>%
+  mutate(ID = row_number()) 
+```
+
+### Comparison plot
+
+```{r}
+ggplot(fitted_train) +
+  geom_point(aes(x = ID, y = Y), col = "blue") +
+  geom_point(aes(x = ID, y = pred_lm), 
+             col = "green", size = 3) +
+  geom_point(aes(x = ID, y = pred_gd), 
+             col = "yellow", size = 2) +
+    geom_point(aes(x = ID, y = pred_gsd), 
+             col = "red", size = 1) +
+  theme_minimal()
+
+```
+
+
