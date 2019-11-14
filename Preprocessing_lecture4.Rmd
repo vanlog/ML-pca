@@ -1,0 +1,220 @@
+---
+title: "Preprocessing:Lecture"
+author: "Kofi"
+date: "07/11/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r cars}
+library(tidyverse)
+library(dataMaid)
+library(caret)
+library(psych)
+library(GGally)
+library(corrplot)
+
+```
+
+```{r}
+Data <- readRDS("./data/segmentation.rds")
+```
+
+## Preparation the data
+```{r}
+seg_data <- Data %>%
+         filter(Case=='Train') %>%
+         select(-c(Cell,Case,Class), -contains("Status"))
+
+```
+
+## Associated Test data
+
+```{r}
+
+seg_data_Test <- Data %>%
+         filter(Case=='Test') %>%
+         select(-c(Cell,Case,Class), -contains("Status"))
+```
+
+
+
+## Center and Scale 
+```{r}
+T_seg <- seg_data %>%
+         preProcess(method="center")
+
+seg_centered <-predict(T_seg,seg_data)
+
+```
+
+```{r}
+T_scale <- seg_data %>%
+         preProcess(method=c("center","scale"))
+
+Seg_scale <- predict(T_scale,seg_data)
+
+```
+
+## Applying PcA
+
+```{r}
+
+T_pca <- seg_data %>%
+         preProcess(method=c("center","scale","pca"),
+                    thresh = 0.99)
+
+Seg_pca_Train <- predict(T_pca,seg_data)
+
+Seg_pca_Test <-  predict(T_pca,seg_data_Test)
+
+
+```
+
+### Applying Range on the Train data
+
+```{r}
+
+T_Range <- seg_data %>%
+               preProcess(method="range",rangeBounds = c(0, 1))
+
+Seg_Range_train <- predict(T_Range,seg_data )
+
+```
+
+```{r}
+ #Hist_data <- seg_data$KurtIntenCh1
+
+
+Hist_data <- ggplot(seg_data,aes(log(KurtIntenCh1)))+geom_histogram()+
+theme_minimal()
+
+
+Hist_data
+```
+
+
+
+
+
+You can also embed plots, for example:
+
+```{r}
+T_boxcox <- seg_data %>%
+  preProcess(method='BoxCox')
+  
+Seg_boxcox <- predict(T_boxcox,seg_data)
+```
+
+## Boxcox Singly
+```{r}
+T_yeojohn <- seg_data %>%
+  preProcess(method='YeoJohnson')
+  
+Seg_yeojohn <- predict(T_yeojohn,seg_data)
+
+```
+
+## Outlier
+```{r}
+
+identifyOutliers(seg_data$KurtIntenCh1)
+```
+It identify the outliers
+
+
+
+## Removing Predictors 
+
+```{r}
+nearZeroVar(seg_data)
+
+```
+No predictor to removed
+
+## Highly Correllated Predictors
+
+```{r}
+pairs.panels(seg_data[,1:10])
+
+
+```
+```{r}
+
+ggpairs(Data,columns = 4:7,
+        aes(col=Class),progress = FALSE)
+```
+```{r}
+ggduo(data = Data,
+      colnames(Data[,4:7]),
+      "Class")
+```
+```{r}
+Seg_heat <- cor(seg_data)
+
+corrplot::corrplot(Seg_heat,
+                     order="hclust",
+                     tl.cex=0.3)
+
+
+```
+```{r}
+hicor<- findCorrelation(Seg_heat, cutoff = 0.80)
+
+SegFilter <- seg_data[,-hicor]
+
+```
+##  Exercise Preprocess
+
+```{r}
+Glass <- readRDS("./data/glass.rds")
+dim(Glass)
+
+```
+## Explore Relationship Between Predictors
+
+```{r}
+Glass_dat <- Glass[,-10]
+
+pairs.panels(Glass_dat)
+
+
+
+```
+
+   We know from the  above plot that there are many most of the predictor are negatively correlated with each other. With few of the element been correlated to each other in a positive manner. The highest positive correlation occured between the Calcium and the refractive index. 
+
+
+
+
+
+##  Question 2a:Checking For Outliers Within The Data
+
+```{r}
+boxplot(Glass_dat)
+
+
+
+
+```
+
+The above is a strong indicator which is explain which predictors have a outliers. In the above plot can see that Refractive index,magnissium and Iron have **minimium** outliers. The remaining predictors on the global scale all have outliers.
+
+
+## Question 2b: Checking For Skewness Within The Predictors
+
+```{r}
+T_boxcox <- seg_data %>%
+  preProcess(method='BoxCox')
+  
+Seg_boxcox <- predict(T_boxcox,seg_data)
+
+
+
+```
+

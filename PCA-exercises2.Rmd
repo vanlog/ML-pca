@@ -60,13 +60,20 @@ pairs.panels(Num_Data[,1:10])
 
 ```
 Overhere we are displaying the correlation of the first 10 numeric variables. We are discoverying that there is a correllation between most of these nutrients. Even though the data associated to variables like ash,carbohydrate,sugar and calcium are not evenly spread. variables like water, energy and proteins are evenly distributed across the spectrum.
+
 ## Question4 
+
 ```{r}
 mean_table <-  Num_Data %>%summarise_all(list(MeanSD=~mean(.)))
 sd_table <-  Num_Data %>%summarise_all(list(MeanSD=~sd(.)))
 meanSD_table <- rbind(mean_table,sd_table)
 
-meanSD_table
+meanSD_table <- meanSD_table %>%
+                gather()
+
+meanSD_table %>%
+  kable()
+
 ```
 
 
@@ -96,13 +103,17 @@ meanSD_table %>%
 
 
 ```
+
 ## Principal Component Analysis Execise
+
 We are working on the second segment of the problem that we are dealing with in the afternoon.
 ```{r}
 P_data <- Num_Data[1:50,1:10]
 
 ```
+
 ## Performing The PCA on the P_data exploratory analysis
+
 ```{r}
 pairs.panels(P_data)
 
@@ -117,7 +128,8 @@ pca_nutri
 We are observing the first ten principal components associated with the our first ten variables.
 
 
-## Question 2 Show your comments 
+## Question 2 Show your comments
+
 ```{r}
 gg<-summary(pca_nutri)
 
@@ -128,6 +140,7 @@ gg
 In this summary table above we observing that the first principal component is explains 47% of the variance whiles the second and third principal components explains the 24% and 14% respectivly. We can also observe that the standard deviation of the first three principal components are 2.16,1.55 and 1.21 respectively. Finally we can also conclude that the first principal component are commulativly explaining 85.5% of the variability associated with our data.
 
 ## Question 3 : Generating The Scree plot
+
 ```{r}
 imp <- gg$importance
 
@@ -178,13 +191,13 @@ ggplot(New_dam,
   geom_point()
 
 ```
-The commulative variance associated with the first two principal component is about `r imp[3,2]`%.
+The commulative variance associated with the first two principal component is about `r imp[3,2]*100`%.
 
 
 ## Data Splitting In Train And Test
+
 ```{r}
-
-
+set.seed(123)
 
 ind <- sample(2, nrow(P_data), replace = TRUE, prob = c(0.8,0.2))
 
